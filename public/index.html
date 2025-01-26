@@ -115,10 +115,10 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="//localhost:1313/posts/initial-post/">My First Post</a>
+          <a href="//localhost:1313/posts/workload-identity/">Workload Identity 連携</a>
         </h1>
 
-        <div class="post-meta"><time class="post-date">2025-01-26</time>
+        <div class="post-meta"><time class="post-date">2025-01-26</time><span class="post-author">Atsuya</span>
           
 
         </div>
@@ -126,9 +126,13 @@
         
           <span class="post-tags">
             
-            #<a href="//localhost:1313/tags/"></a>&nbsp;
+            #<a href="//localhost:1313/tags/eks/">eks</a>&nbsp;
             
-            #<a href="//localhost:1313/tags/"></a>&nbsp;
+            #<a href="//localhost:1313/tags/workloadidentity/">workloadidentity</a>&nbsp;
+            
+            #<a href="//localhost:1313/tags/aws/">aws</a>&nbsp;
+            
+            #<a href="//localhost:1313/tags/gcp/">gcp</a>&nbsp;
             
           </span>
         
@@ -139,13 +143,54 @@
 
         <div class="post-content">
           
-            
+            <h1 id="はじめに">はじめに</h1>
+<p>AWS 上のアプリケーションから Google API を呼び出す必要があり、
+その認証・認可の手法として Workload Identity 連携を設定したので備忘録です。</p>
+<h1 id="workload-identity-連携について">Workload Identity 連携について</h1>
+<p>Workload Identity 連携の特徴はざっと以下のような感じです。</p>
+<ul>
+<li>他のクラウドサービス上で動くアプリケーションから Google サービスアカウントの権限を借用することができる</li>
+<li>アプリケーション側に設定する credential 情報にシークレット情報は含まれないので、安全に取り回すことができる</li>
+</ul>
+<p>前者自体は他の方法でも達成することができますが、
+シークレット情報を含むためセキュリティ観点から取扱いが難しいです。</p>
+<p>では、 Workload Identity 連携でどうやって後者を実現しているかというと、
+サービスアカウントを所有している Google Cloud 側とアプリケーション側にそれぞれ受入れ設定とリクエスト設定を入れるからです。</p>
+<p>イメージとしては、インターホンが鳴った時に声と顔を見て相手が誰かを識別して対応を変える感じですかね。</p>
+<h1 id="google-cloud-側の設定">Google Cloud 側の設定</h1>
+<p>Google Cloud 側にはワークロードの受入れ設定をしていきます。
+が、その前に Workload Identity 連携で使われる重要な二つの概念を紹介しておきます。
+把握しておくと読み進めやすいです。</p>
+<table>
+  <thead>
+      <tr>
+          <th>用語</th>
+          <th>説明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Pool</td>
+          <td>複数のプロバイダをグループ化し、Google Cloud の IAM との橋渡しをする</td>
+      </tr>
+      <tr>
+          <td>Provider</td>
+          <td>実際に認証を行う外部 ID ソース（OIDC/SAML）</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="1-google-サービスアカウントの作成">1. Google サービスアカウントの作成</h2>
+<p>いつも通り Google サービスアカウントを作成しましょう。そしていつも通り自分の欲しい権限を付与しておきます。</p>
+<p>そして Workload Identity 連携経由でサービスアカウントの認証が取れるように<strong>ロールに「Workload Identity ユーザー」を付与しておきます。</strong></p>
+<h2 id="2-workload-identity-プールの作成">2. Workload Identity プールの作成</h2>
+<p><a href="https://console.cloud.google.com/iam-admin/workload-identity-pools">コンソール</a>からプールを作成します。
+最初からプロバイダ設定も行う必要があるみたいですが、この時点では難しいのでプール名以外は適当に入力してとりあえずプールを作成します。</p>
           
         </div>
 
         
           <div>
-            <a class="read-more button" href="/posts/initial-post/">Read more →</a>
+            <a class="read-more button" href="/posts/workload-identity/">Read more →</a>
           </div>
         
       </article>

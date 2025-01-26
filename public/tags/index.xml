@@ -5,6 +5,47 @@
     <link>//localhost:1313/tags/</link>
     <description>Recent content in Tags on </description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>ja</language><atom:link href="//localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
+    <language>ja</language>
+    <lastBuildDate>Sun, 26 Jan 2025 15:04:40 +0900</lastBuildDate><atom:link href="//localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Aws</title>
+      <link>//localhost:1313/tags/aws/</link>
+      <pubDate>Sun, 26 Jan 2025 15:04:40 +0900</pubDate>
+      
+      <guid>//localhost:1313/tags/aws/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Eks</title>
+      <link>//localhost:1313/tags/eks/</link>
+      <pubDate>Sun, 26 Jan 2025 15:04:40 +0900</pubDate>
+      
+      <guid>//localhost:1313/tags/eks/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Gcp</title>
+      <link>//localhost:1313/tags/gcp/</link>
+      <pubDate>Sun, 26 Jan 2025 15:04:40 +0900</pubDate>
+      
+      <guid>//localhost:1313/tags/gcp/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Workloadidentity</title>
+      <link>//localhost:1313/tags/workloadidentity/</link>
+      <pubDate>Sun, 26 Jan 2025 15:04:40 +0900</pubDate>
+      
+      <guid>//localhost:1313/tags/workloadidentity/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
   </channel>
 </rss>

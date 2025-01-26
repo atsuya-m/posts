@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  
+    <title>Workload Identity 連携 :: </title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="はじめに AWS 上のアプリケーションから Google API を呼び出す必要があり、 その認証・認可の手法として Workload Identity 連携を設定したので備忘録です。
+Workload Identity 連携について Workload Identity 連携の特徴はざっと以下のような感じです。
+他のクラウドサービス上で動くアプリケーションから Google サービスアカウントの権限を借用することができる アプリケーション側に設定する credential 情報にシークレット情報は含まれないので、安全に取り回すことができる 前者自体は他の方法でも達成することができますが、 シークレット情報を含むためセキュリティ観点から取扱いが難しいです。
+では、 Workload Identity 連携でどうやって後者を実現しているかというと、 サービスアカウントを所有している Google Cloud 側とアプリケーション側にそれぞれ受入れ設定とリクエスト設定を入れるからです。
+イメージとしては、インターホンが鳴った時に声と顔を見て相手が誰かを識別して対応を変える感じですかね。
+Google Cloud 側の設定 Google Cloud 側にはワークロードの受入れ設定をしていきます。 が、その前に Workload Identity 連携で使われる重要な二つの概念を紹介しておきます。 把握しておくと読み進めやすいです。
+用語 説明 Pool 複数のプロバイダをグループ化し、Google Cloud の IAM との橋渡しをする Provider 実際に認証を行う外部 ID ソース（OIDC/SAML） 1. Google サービスアカウントの作成 いつも通り Google サービスアカウントを作成しましょう。そしていつも通り自分の欲しい権限を付与しておきます。
+そして Workload Identity 連携経由でサービスアカウントの認証が取れるようにロールに「Workload Identity ユーザー」を付与しておきます。
+2. Workload Identity プールの作成 コンソールからプールを作成します。 最初からプロバイダ設定も行う必要があるみたいですが、この時点では難しいのでプール名以外は適当に入力してとりあえずプールを作成します。
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="//localhost:1313/posts/tidb-on-minikube/" />
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  <link rel="stylesheet" href="//localhost:1313/styles.css">
+
+
+
+
+
+
+
+  <link rel="shortcut icon" href="//localhost:1313/img/theme-colors/orange.png">
+  <link rel="apple-touch-icon" href="//localhost:1313/img/theme-colors/orange.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="ja" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Workload Identity 連携">
+<meta property="og:description" content="はじめに AWS 上のアプリケーションから Google API を呼び出す必要があり、 その認証・認可の手法として Workload Identity 連携を設定したので備忘録です。
+Workload Identity 連携について Workload Identity 連携の特徴はざっと以下のような感じです。
+他のクラウドサービス上で動くアプリケーションから Google サービスアカウントの権限を借用することができる アプリケーション側に設定する credential 情報にシークレット情報は含まれないので、安全に取り回すことができる 前者自体は他の方法でも達成することができますが、 シークレット情報を含むためセキュリティ観点から取扱いが難しいです。
+では、 Workload Identity 連携でどうやって後者を実現しているかというと、 サービスアカウントを所有している Google Cloud 側とアプリケーション側にそれぞれ受入れ設定とリクエスト設定を入れるからです。
+イメージとしては、インターホンが鳴った時に声と顔を見て相手が誰かを識別して対応を変える感じですかね。
+Google Cloud 側の設定 Google Cloud 側にはワークロードの受入れ設定をしていきます。 が、その前に Workload Identity 連携で使われる重要な二つの概念を紹介しておきます。 把握しておくと読み進めやすいです。
+用語 説明 Pool 複数のプロバイダをグループ化し、Google Cloud の IAM との橋渡しをする Provider 実際に認証を行う外部 ID ソース（OIDC/SAML） 1. Google サービスアカウントの作成 いつも通り Google サービスアカウントを作成しましょう。そしていつも通り自分の欲しい権限を付与しておきます。
+そして Workload Identity 連携経由でサービスアカウントの認証が取れるようにロールに「Workload Identity ユーザー」を付与しておきます。
+2. Workload Identity プールの作成 コンソールからプールを作成します。 最初からプロバイダ設定も行う必要があるみたいですが、この時点では難しいのでプール名以外は適当に入力してとりあえずプールを作成します。
+" />
+<meta property="og:url" content="//localhost:1313/posts/tidb-on-minikube/" />
+<meta property="og:site_name" content="" />
+
+  
+    <meta property="og:image" content="//localhost:1313/img/favicon/orange.png">
+  
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+
+  <meta property="article:published_time" content="2025-01-26 15:04:40 &#43;0900 JST" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+</head>
+<body class="orange">
+
+
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    YORDLE
+  </div>
+</a>
+
+    </div>
+    
+    
+  </div>
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="//localhost:1313/posts/tidb-on-minikube/">Workload Identity 連携</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-01-26</time><span class="post-author">Atsuya</span>
+    
+</div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="//localhost:1313/tags/eks/">eks</a>&nbsp;
+      
+      #<a href="//localhost:1313/tags/workloadidentity/">workloadidentity</a>&nbsp;
+      
+      #<a href="//localhost:1313/tags/aws/">aws</a>&nbsp;
+      
+      #<a href="//localhost:1313/tags/gcp/">gcp</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="はじめに">はじめに<a href="#はじめに" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>AWS 上のアプリケーションから Google API を呼び出す必要があり、
+その認証・認可の手法として Workload Identity 連携を設定したので備忘録です。</p>
+<h1 id="workload-identity-連携について">Workload Identity 連携について<a href="#workload-identity-連携について" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Workload Identity 連携の特徴はざっと以下のような感じです。</p>
+<ul>
+<li>他のクラウドサービス上で動くアプリケーションから Google サービスアカウントの権限を借用することができる</li>
+<li>アプリケーション側に設定する credential 情報にシークレット情報は含まれないので、安全に取り回すことができる</li>
+</ul>
+<p>前者自体は他の方法でも達成することができますが、
+シークレット情報を含むためセキュリティ観点から取扱いが難しいです。</p>
+<p>では、 Workload Identity 連携でどうやって後者を実現しているかというと、
+サービスアカウントを所有している Google Cloud 側とアプリケーション側にそれぞれ受入れ設定とリクエスト設定を入れるからです。</p>
+<p>イメージとしては、インターホンが鳴った時に声と顔を見て相手が誰かを識別して対応を変える感じですかね。</p>
+<h1 id="google-cloud-側の設定">Google Cloud 側の設定<a href="#google-cloud-側の設定" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Google Cloud 側にはワークロードの受入れ設定をしていきます。
+が、その前に Workload Identity 連携で使われる重要な二つの概念を紹介しておきます。
+把握しておくと読み進めやすいです。</p>
+<table>
+  <thead>
+      <tr>
+          <th>用語</th>
+          <th>説明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Pool</td>
+          <td>複数のプロバイダをグループ化し、Google Cloud の IAM との橋渡しをする</td>
+      </tr>
+      <tr>
+          <td>Provider</td>
+          <td>実際に認証を行う外部 ID ソース（OIDC/SAML）</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="1-google-サービスアカウントの作成">1. Google サービスアカウントの作成<a href="#1-google-サービスアカウントの作成" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>いつも通り Google サービスアカウントを作成しましょう。そしていつも通り自分の欲しい権限を付与しておきます。</p>
+<p>そして Workload Identity 連携経由でサービスアカウントの認証が取れるように<strong>ロールに「Workload Identity ユーザー」を付与しておきます。</strong></p>
+<h2 id="2-workload-identity-プールの作成">2. Workload Identity プールの作成<a href="#2-workload-identity-プールの作成" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p><a href="https://console.cloud.google.com/iam-admin/workload-identity-pools">コンソール</a>からプールを作成します。
+最初からプロバイダ設定も行う必要があるみたいですが、この時点では難しいのでプール名以外は適当に入力してとりあえずプールを作成します。</p>
+<h2 id="3-プロバイダの設定を追加する">3. プロバイダの設定を追加する<a href="#3-プロバイダの設定を追加する" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>コンソールから先ほど作成したプールのページを開くと「プロバイダを追加」ボタンがあります。</p>
+<h3 id="プロバイダの種類">プロバイダの種類<a href="#プロバイダの種類" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>最初にプロバイダの種類を選択することになるのですが、自分の場合は EKS on Fargate (AWS) でアプリケーションを動かしているのでここでは OIDC を選択します。</p>
+<blockquote>
+<p>AWS じゃなくて OIDC なの？</p>
+<p>逆に AWS という選択肢は ECS 専用だと思って良いと思います。
+EKS の場合は、ポッド起動時にポッドに設定してある Kubernetes Service Account の認証情報を
+<code>/var/run/secrets/eks.amazonaws.com/serviceaccount/token</code> にマウントします。
+この認証情報の発行者は EKS クラスタ上にある OIDC プロバイダなので、まさに OIDC を選択できます。</p>
+</blockquote>
+<h3 id="発行元オーディエンス">発行元・オーディエンス<a href="#発行元オーディエンス" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>次に発行元とオーディエンスを設定していくのですが、
+OIDC プロバイダの場合は発行されている jwt トークンをベースに設定項目を埋めていきます。</p>
+<p>サンプルとして以下に EKS 上の OIDC プロバイダが発行した jwt トークンを記載します。
+（なお、一部はセキュリティ観点からダミーの情報に書き換えています）</p>
+<pre tabindex="0"><code>{
+  &#34;aud&#34;: [
+    &#34;sts.amazonaws.com&#34;
+  ],
+  &#34;exp&#34;: 1111111111,
+  &#34;iat&#34;: 1111111111,
+  &#34;iss&#34;: &#34;https://oidc.eks.ap-northeast-1.amazonaws.com/id/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&#34;,
+  &#34;jti&#34;: &#34;aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&#34;,
+  &#34;kubernetes.io&#34;: {
+    &#34;namespace&#34;: &#34;namespace-hoge&#34;,
+    &#34;node&#34;: {
+      &#34;name&#34;: &#34;fargate-ip-172-21-157-189.ap-northeast-1.compute.internal&#34;,
+      &#34;uid&#34;: &#34;ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj&#34;
+    },
+    &#34;pod&#34;: {
+      &#34;name&#34;: &#34;atsuya-8b657f89d-wjzfc&#34;,
+      &#34;uid&#34;: &#34;kkkkkkkk-llll-mmmm-nnnn-oooooooooooo&#34;
+    },
+    &#34;serviceaccount&#34;: {
+      &#34;name&#34;: &#34;atsuya-service-account&#34;,
+      &#34;uid&#34;: &#34;pppppppp-qqqq-rrrr-ssss-tttttttttttt&#34;
+    }
+  },
+  &#34;nbf&#34;: 1111111111,
+  &#34;sub&#34;: &#34;system:serviceaccount:namespace-hoge:atsuya-service-account&#34;
+}
+</code></pre><p>上記のような jwt トークンの場合は以下のように設定します。</p>
+<table>
+  <thead>
+      <tr>
+          <th>設定</th>
+          <th>値</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>発行元(URL)</td>
+          <td><code>https://oidc.eks.ap-northeast-1.amazonaws.com/id/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</code></td>
+      </tr>
+      <tr>
+          <td>オーディエンス</td>
+          <td><code>sts.amazonaws.com</code></td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="属性">属性<a href="#属性" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>ここまでで、一応は発行元を設定したので同じ発行元であればOKというぐらいには緩い設定が完了しています。
+とはいえそれだけだとセキュリティ敵に厳しいということがあるのでさらにこの jwt トークンから必要な値を属性として設定していきます。</p>
+<p>この時、 jwt トークンの構文解析のために <a href="https://github.com/google/cel-spec/blob/master/doc/intro.md#introduction">CEL式</a>を使用します。</p>
+<p>基本的には <code>google.subject = assertion.sub</code> と入力しておけばOKですが、
+自分の場合は「EKS上の Namespace は任意の値であってほしい」という需要があったので、マッピングを追加して
+<code>attribute.ksa_name = assertion.sub.split(&quot;:&quot;)[3]</code> という属性を追加しました。</p>
+<h2 id="4-サービスアカウントとプールを紐付ける">4. サービスアカウントとプールを紐付ける<a href="#4-サービスアカウントとプールを紐付ける" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>ここまで設定が完了したら後は「どのサービスアカウント」の権限を借用するかを設定します。</p>
+<p>コンソールの「アクセスを許可」から 1. で作成したサービスアカウントを選択し、 3. で設定した属性とその属性がどういう値の場合かを入力します。</p>
+<p>例えば自分の場合は、</p>
+<table>
+  <thead>
+      <tr>
+          <th>属性名</th>
+          <th>属性値</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>ksa_name</td>
+          <td>atusya-service-account</td>
+      </tr>
+  </tbody>
+</table>
+<p>です。
+以上で Google Cloud 側の設定は完了です。</p>
+<h1 id="アプリケーション側の設定">アプリケーション側の設定<a href="#アプリケーション側の設定" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Google Cloud 側の設定が完了すると Workload Identity 用の credentials.json をダウンロードできます。
+ダウンロードした json をアプリケーション側の任意のディレクトリに配置し、環境変数<code>GOOGLE_APPLICATION_CREDENTIALS</code>でそのファイルパスを指定します。</p>
+<p>後はアプリケーション側の Google API Client Library がよしなに Workload Identity 連携フローに沿って Google サービスアカウントの認証を得てくれます。</p>
+<blockquote>
+<p>クライアントライブラリの具体的な処理順は Go クライアントの実装が一番分かり易かったです。
+もし、クライアントライブラリを使用せずに Workload Identity 連携をしたい場合は、そちらを参照ください。</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">Read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+        
+        <span class="button next">
+            <a href="//localhost:1313/posts/initial-post/">
+                <span class="button__text">My First Post</span>
+                <span class="button__icon">→</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>Atsuya</span>
+    
+      <span>:: <a href="https://github.com/mirus-ua/hugo-theme-re-terminal" target="_blank">Theme</a> made by <a href="https://github.com/mirus-ua" target="_blank">Mirus</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
