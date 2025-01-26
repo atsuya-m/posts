@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title></title>
+    <link>//localhost:1313/</link>
+    <description>Recent content on </description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Sun, 26 Jan 2025 14:29:55 +0900</lastBuildDate><atom:link href="//localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My First Post</title>
+      <link>//localhost:1313/posts/initial-post/</link>
+      <pubDate>Sun, 26 Jan 2025 14:29:55 +0900</pubDate>
+      
+      <guid>//localhost:1313/posts/initial-post/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+  </channel>
+</rss>
